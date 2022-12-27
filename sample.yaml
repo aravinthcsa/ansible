@@ -1,0 +1,43 @@
+-hosts: all
+remote_user: ec2-user
+become: yes 
+tasks:
+  - name: Install the latest version of java
+    yum:
+      name: java-1.8-openjdk
+      state: present
+  - name: install sonarqube 
+    ansible.builtin.get_url:
+      url: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.10.61524.zip
+      dest: /opt/
+  - name: Unarchive a file that is already on the remote machine
+    ansible.builtin.unarchive:
+     src: /opt/sonarqube-8.9.10.61524.zip
+     dest: /opt/
+     remote_src: yes
+     mode: '777'
+  - name: Change file ownership, group and permissions
+    ansible.builtin.file:
+      path: /opt/sonarqube-8.9.10.61524
+      owner: ec2-user
+      group: ec2-user
+      mode: '0777'
+  - name: Remove file (delete file)
+    ansible.builtin.file:
+      path: /opt/sonarqube-8.9.10.61524/conf/*
+      state: absent
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      src: wrapper.conf
+      dest: /opt/sonarqube-8.9.10.61524/conf/
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      src: sonar.properties
+      dest: /opt/sonarqube-8.9.10.61524/conf/
+  - name: Execute the command in remote shell; stdout goes to the specified file on the remote
+    ansible.builtin.shell:
+      args:
+      chdir: /opt/sonarqube-8.9.10.61524/bin/
+      executable: sonar.sh
+    
+   
